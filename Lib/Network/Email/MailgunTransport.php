@@ -38,6 +38,7 @@ class MailgunTransport extends AbstractTransport {
         'Reply-To' => 'h:Reply-To',
         'Disposition-Notification-To' => 'h:Disposition-Notification-To',
         'Return-Path' => 'h:Return-Path',
+		'List-Unsubscribe' => 'h:List-Unsubscribe',
 
         'o:tag' => 'o:tag',
         'mg:tag' => 'o:tag',
@@ -83,9 +84,15 @@ class MailgunTransport extends AbstractTransport {
         }
 
         $mgClient = new Mailgun($this->_config['mg_api_key']);
-
-        $headersList = array('from', 'sender', 'replyTo', 'readReceipt', 'returnPath', 'to', 'cc', 'bcc', 'subject');
         $params = [];
+		$headers = $email->getHeaders();
+		if (isset($headers['X-Mailgun-Variables'])) {
+			foreach ($headers['X-Mailgun-Variables'] as $header => $value) {
+				$params['v:' . $header] = $value;
+			}
+		}
+
+        $headersList = array('from', 'sender', 'replyTo', 'readReceipt', 'returnPath', 'to', 'cc', 'bcc', 'subject', 'List-Unsubscribe');
         foreach ($email->getHeaders($headersList) as $header => $value) {
             if (isset($this->_paramMapping[$header]) && !empty($value)) {
                 $key = $this->_paramMapping[$header];
